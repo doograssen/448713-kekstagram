@@ -48,7 +48,7 @@ function getComments() {
   return resultArray;
 }
 
-/*заполняем объект информацией о фото*/
+/* заполняем объект информацией о фото*/
 function setPictureObj(index, arr) {
   var obj = {};
   obj.url = 'photos/' + arr[index] + '.jpg';
