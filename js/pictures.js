@@ -16,22 +16,6 @@ var PICTUE_TEMPLATE = document.querySelector('#picture-template').content;
 var overlay = document.querySelector('.gallery-overlay');
 var pictures = document.querySelector('.pictures');
 
-/* функция для случайной сортировки массива */
-function shuffle(arr) {
-  return arr.sort(function () {
-    return Math.random() - 0.5;
-  });
-}
-
-/* функция создания массиа заданной длины с случаным расположением  элементов */
-function createArray(amount) {
-  var arr = [];
-  for (var i = 0; i < amount; i++) {
-    arr[i] = i + 1;
-  }
-  return shuffle(arr);
-}
-
 /* функция для случайного числа от мин до макс */
 function getRandomValue(min, max) {
   return min + Math.round((max - min) * Math.random());
@@ -40,18 +24,19 @@ function getRandomValue(min, max) {
 /* функция для получения одного двух случайых комментариев */
 function getComments() {
   var commentsAmount = getRandomValue(1, 2);
-  var arr = createArray(COMMENTS_ARRAY.length);
-  var resultArray = [];
+  var arr = [];
+  var index;
   for (var i = 0; i < commentsAmount; i++) {
-    resultArray[i] = arr[i];
+    index = getRandomValue(0, COMMENTS_ARRAY.length - i);
+    arr.push(COMMENTS_ARRAY[index]);
   }
-  return resultArray;
+  return arr;
 }
 
 /* заполняем объект информацией о фото*/
-function setPictureObj(index, arr) {
+function setPictureObj(index) {
   var obj = {};
-  obj.url = 'photos/' + arr[index] + '.jpg';
+  obj.url = 'photos/' + index + '.jpg';
   obj.likes = getRandomValue(15, 200);
   obj.comments = getComments();
   return obj;
@@ -59,9 +44,8 @@ function setPictureObj(index, arr) {
 
 /* функция заполнения массива с информацией о фотографиях */
 function setPicturesObjArray() {
-  var pictureNumbers = createArray(OBJECT_AMOUNT);
   for (var i = 0; i < OBJECT_AMOUNT; i++) {
-    picturesArray[i] = setPictureObj(i, pictureNumbers);
+    picturesArray[i] = setPictureObj(i + 1);
   }
 }
 
@@ -91,7 +75,7 @@ function showPictureSample(obj) {
   var comments = overlay.querySelector('.comments-count');*/
   overlay.querySelector('.gallery-overlay-image').src = obj.url;
   overlay.querySelector('.likes-count').textContent = obj.likes;
-  overlay.querySelector('.comments-count').textContent = obj.comments;
+  overlay.querySelector('.comments-count').textContent = obj.comments.length;
 }
 
 /* выводим все на страницу */
