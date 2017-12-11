@@ -1,8 +1,8 @@
 'use strict';
 
 var OBJECT_AMOUNT = 25;
-var ESCKEYCODE = 27;
-var ENTERKEYCODE = 13;
+var ESC_KEY_CODE = 27;
+var ENTER_KEY_CODE = 13;
 
 var picturesArray = [];
 
@@ -18,12 +18,16 @@ var PICTURE_TEMPLATE = document.querySelector('#picture-template').content;
 var overlay = document.querySelector('.gallery-overlay');
 var pictures = document.querySelector('.pictures');
 var closeButton = overlay.querySelector('.gallery-overlay-close');
-    /* функция для случайного числа от мин до макс */
+/* функция для случайного числа от мин до макс */
 function getRandomValue(min, max) {
   return min + Math.round((max - min) * Math.random());
 }
 
-/* функция для получения одного двух случайых комментариев */
+// ------------------------------------------------------------------------------------------------------------------
+// -------------------------------ФОРМИРОВАНИЕ ДАННЫХ И ВЫВОД НА СТРАНИЦУ--------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------
+
+/* ------- Функция для получения одного двух случайых комментариев --*/
 function getComments() {
   var commentsAmount = getRandomValue(1, 2);
   var arr = [];
@@ -44,14 +48,14 @@ function setPictureObj(index) {
   return obj;
 }
 
-/* функция заполнения массива с информацией о фотографиях */
+/* -------- Функция заполнения массива с информацией о фотографиях --*/
 function setPicturesObjArray() {
   for (var i = 0; i < OBJECT_AMOUNT; i++) {
     picturesArray[i] = setPictureObj(i + 1);
   }
 }
 
-/* функция зфполнения шаблона */
+/* ---------- Функция заполнения шаблона ----------------------------*/
 function fillTemplate(obj) {
   var pictureElement = PICTURE_TEMPLATE.cloneNode(true);
   pictureElement.querySelector('img').src = obj.url;
@@ -60,7 +64,7 @@ function fillTemplate(obj) {
   return pictureElement;
 }
 
-/* функция заполнения страницы фотографиями*/
+/* ---------- Функция заполнения страницы фотографиями --------------*/
 function appendPicturesToDOM(arr) {
   var fragment = document.createDocumentFragment();
   for (var i = 0; i < arr.length; i++) {
@@ -69,6 +73,9 @@ function appendPicturesToDOM(arr) {
   pictures.appendChild(fragment);
 }
 
+// ------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------- ОПИСАНИЕ СОБЫТИЙ ----------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------
 /* функция показа окна с одним из фото */
 function showPictureSample(obj) {
   overlay.querySelector('.gallery-overlay-image').src = obj.url;
@@ -76,38 +83,68 @@ function showPictureSample(obj) {
   overlay.querySelector('.comments-count').textContent = obj.comments.length;
 }
 
-function pictureClick(index) {
-  return function () {
-    showPictureSample(picturesArray[index]);
-    overlay.classList.remove('hidden');
-  };
-}
-
-function setPictureListener() {
-  var elementArray = pictures.querySelectorAll('.picture');
-  for (var i = 0; i < OBJECT_AMOUNT; i++) {
-    elementArray[i].addEventListener('click', pictureClick(i));
-    closeButton.addEventListener('click', function () {
-      overlay.classList.add('hidden');
-    });
-    closeButton.addEventListener('keydown', function (evt) {
-      if (evt.keyCode === ENTERKEYCODE) {
-        overlay.classList.add('hidden');
-      }
-    });
-    document.addEventListener('keydown', function(evt) {
-      if (evt.keyCode === ESCKEYCODE) {
-        overlay.classList.add('hidden');
-      }
-    });
+/* ---- Закрытие окна по нажатию ESC --------------------------------*/
+function onPopupEscPress(evt) {
+  if (evt.keyCode === ESC_KEY_CODE) {
+    closePopup();
   }
 }
 
-/* выводим все на страницу */
+/* ------ Показ окна с  фото ----------------------------------------*/
+function showPopup(index) {
+  showPictureSample(picturesArray[index]);
+  overlay.classList.remove('hidden');
+  document.addEventListener('keydown', onPopupEscPress);
+}
+
+/* ------ Закрытие окна с  фото -------------------------------------*/
+function closePopup() {
+  overlay.classList.add('hidden');
+  document.removeEventListener('keydown', onPopupEscPress);
+}
+
+/* ------ Назначение обработчиков событий для фото ------------------*/
+function setPictureListeners(obj, index) {
+  obj.addEventListener('click', function (evt) {
+    evt.preventDefault();
+    showPopup(index);
+  });
+  obj.addEventListener('keydown', function (evt) {
+    if (evt.keyCode === ENTER_KEY_CODE) {
+      evt.preventDefault();
+      showPopup(index);
+    }
+  });
+}
+
+/* ------ Назначение обработчиков событий для галереи ---------------*/
+function setGalleryListeners() {
+  var elementArray = pictures.querySelectorAll('.picture');
+  for (var i = 0; i < OBJECT_AMOUNT; i++) {
+    setPictureListeners(elementArray[i], i);
+  }
+  closeButton.addEventListener('click', function () {
+    closePopup();
+  });
+  closeButton.addEventListener('keydown', function (evt) {
+    if (evt.keyCode === ENTER_KEY_CODE) {
+      closePopup();
+    }
+  });
+  document.addEventListener('keydown', function(evt) {
+    if (evt.keyCode === ESC_KEY_CODE) {
+      closePopup();
+    }
+  });
+}
+// --------------------------------------------------------------------------------------------------------------------
+
+
+/* ------------- Выводим все на страницу ----------------------------*/
 function fillPage() {
   setPicturesObjArray();
   appendPicturesToDOM(picturesArray);
-  setPictureListener();
+  setGalleryListeners();
 }
 
 fillPage();
