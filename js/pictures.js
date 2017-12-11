@@ -1,6 +1,8 @@
 'use strict';
 
 var OBJECT_AMOUNT = 25;
+var ESCKEYCODE = 27;
+var ENTERKEYCODE = 13;
 
 var picturesArray = [];
 
@@ -11,12 +13,12 @@ var COMMENTS_ARRAY = ['Всё отлично!',
   'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше.',
   'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!'];
 
-var PICTUE_TEMPLATE = document.querySelector('#picture-template').content;
+var PICTURE_TEMPLATE = document.querySelector('#picture-template').content;
 
 var overlay = document.querySelector('.gallery-overlay');
 var pictures = document.querySelector('.pictures');
-
-/* функция для случайного числа от мин до макс */
+var closeButton = overlay.querySelector('.gallery-overlay-close');
+    /* функция для случайного числа от мин до макс */
 function getRandomValue(min, max) {
   return min + Math.round((max - min) * Math.random());
 }
@@ -51,7 +53,7 @@ function setPicturesObjArray() {
 
 /* функция зфполнения шаблона */
 function fillTemplate(obj) {
-  var pictureElement = PICTUE_TEMPLATE.cloneNode(true);
+  var pictureElement = PICTURE_TEMPLATE.cloneNode(true);
   pictureElement.querySelector('img').src = obj.url;
   pictureElement.querySelector('.picture-likes').textContent = obj.likes;
   pictureElement.querySelector('.picture-comments').textContent = obj.comments.length;
@@ -69,20 +71,43 @@ function appendPicturesToDOM(arr) {
 
 /* функция показа окна с одним из фото */
 function showPictureSample(obj) {
-  overlay.classList.remove('hidden');
-  /* var image = overlay.querySelector('.gallery-overlay-image');
-  var likes = overlay.querySelector('.likes-count');
-  var comments = overlay.querySelector('.comments-count');*/
   overlay.querySelector('.gallery-overlay-image').src = obj.url;
   overlay.querySelector('.likes-count').textContent = obj.likes;
   overlay.querySelector('.comments-count').textContent = obj.comments.length;
+}
+
+function pictureClick(index) {
+  return function () {
+    showPictureSample(picturesArray[index]);
+    overlay.classList.remove('hidden');
+  };
+}
+
+function setPictureListener() {
+  var elementArray = pictures.querySelectorAll('.picture');
+  for (var i = 0; i < OBJECT_AMOUNT; i++) {
+    elementArray[i].addEventListener('click', pictureClick(i));
+    closeButton.addEventListener('click', function () {
+      overlay.classList.add('hidden');
+    });
+    closeButton.addEventListener('keydown', function (evt) {
+      if (evt.keyCode === ENTERKEYCODE) {
+        overlay.classList.add('hidden');
+      }
+    });
+    document.addEventListener('keydown', function(evt) {
+      if (evt.keyCode === ESCKEYCODE) {
+        overlay.classList.add('hidden');
+      }
+    });
+  }
 }
 
 /* выводим все на страницу */
 function fillPage() {
   setPicturesObjArray();
   appendPicturesToDOM(picturesArray);
-  showPictureSample(picturesArray[0]);
+  setPictureListener();
 }
 
 fillPage();
