@@ -3,7 +3,7 @@
 var OBJECT_AMOUNT = 25;
 var ESC_KEY_CODE = 27;
 var ENTER_KEY_CODE = 13;
-
+var MAX_COMMENT_LENGTH = 140;
 var picturesArray = [];
 
 var COMMENTS_ARRAY = ['Всё отлично!',
@@ -17,14 +17,19 @@ var PICTURE_TEMPLATE = document.querySelector('#picture-template').content;
 
 var overlay = document.querySelector('.gallery-overlay');
 var pictures = document.querySelector('.pictures');
-var closeButton = overlay.querySelector('.gallery-overlay-close');
+var uploadForm = document.querySelector('#upload-select-image');
+var pickFile = uploadForm.querySelector('#upload-file');
+var framingWindow = uploadForm.querySelector('.upload-overlay');
+var comment = framingWindow.querySelector('.upload-form-description');
+var frameSize = framingWindow.querySelector('.upload-resize-controls-value');
+var listener;
 /* функция для случайного числа от мин до макс */
 function getRandomValue(min, max) {
   return min + Math.round((max - min) * Math.random());
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-// -------------------------------ФОРМИРОВАНИЕ ДАННЫХ И ВЫВОД НА СТРАНИЦУ--------------------------------------------
+// ------------------------------ ФОРМИРОВАНИЕ ДАННЫХ И ВЫВОД НА СТРАНИЦУ -------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------
 
 /* ------- Функция для получения одного двух случайых комментариев --*/
@@ -83,36 +88,57 @@ function showPictureSample(obj) {
   overlay.querySelector('.comments-count').textContent = obj.comments.length;
 }
 
+// ````````
 /* ---- Закрытие окна по нажатию ESC --------------------------------*/
-function onPopupEscPress(evt) {
-  if (evt.keyCode === ESC_KEY_CODE) {
-    closePopup();
-  }
+function addListenerToElem(elem) {
+  return function onPopupEscPress(evt) {
+    if ((evt.keyCode === ESC_KEY_CODE) && (evt.target.nodeName !== 'TEXTAREA')) {
+      closePopup(elem);
+    }
+  };
 }
 
 /* ------ Показ окна с  фото ----------------------------------------*/
-function showPopup(index) {
-  showPictureSample(picturesArray[index]);
-  overlay.classList.remove('hidden');
-  document.addEventListener('keydown', onPopupEscPress);
+function showPopup(elem) {
+  // showPictureSample(picturesArray[index]);
+  elem.classList.remove('hidden');
+  listener = addListenerToElem(elem);
+  document.addEventListener('keydown', listener);
 }
 
 /* ------ Закрытие окна с  фото -------------------------------------*/
-function closePopup() {
-  overlay.classList.add('hidden');
-  document.removeEventListener('keydown', onPopupEscPress);
+function closePopup(elem) {
+  elem.classList.add('hidden');
+  document.removeEventListener('keydown', listener);
+  listener = null;
 }
+/* ------ Закрытие окна по кнопке -------------------------------------*/
+
+function setCloseBtnListener(btnElem, elemToClose) {
+  btnElem.addEventListener('click', function () {
+    closePopup(elemToClose);
+  });
+  btnElem.addEventListener('keydown', function (evt) {
+    if (evt.keyCode === ENTER_KEY_CODE) {
+      closePopup(elemToClose);
+    }
+  });
+}
+// ````````
+
 
 /* ------ Назначение обработчиков событий для фото ------------------*/
 function setPictureListeners(obj, index) {
   obj.addEventListener('click', function (evt) {
     evt.preventDefault();
-    showPopup(index);
+    showPictureSample(picturesArray[index]);
+    showPopup(overlay);
   });
   obj.addEventListener('keydown', function (evt) {
     if (evt.keyCode === ENTER_KEY_CODE) {
       evt.preventDefault();
-      showPopup(index);
+      showPictureSample(picturesArray[index]);
+      showPopup(overlay);
     }
   });
 }
@@ -123,28 +149,55 @@ function setGalleryListeners() {
   for (var i = 0; i < OBJECT_AMOUNT; i++) {
     setPictureListeners(elementArray[i], i);
   }
-  closeButton.addEventListener('click', function () {
-    closePopup();
-  });
-  closeButton.addEventListener('keydown', function (evt) {
-    if (evt.keyCode === ENTER_KEY_CODE) {
-      closePopup();
-    }
-  });
-  document.addEventListener('keydown', function (evt) {
-    if (evt.keyCode === ESC_KEY_CODE) {
-      closePopup();
-    }
-  });
+  var closeButton = overlay.querySelector('.gallery-overlay-close');
+  setCloseBtnListener(closeButton, overlay);
 }
-// --------------------------------------------------------------------------------------------------------------------
 
+function setFramingListeners() {
+  pickFile.addEventListener('change', function () {
+    showPopup(framingWindow);
+  });
+  var closeButton = uploadForm.querySelector('.upload-form-cancel');
+  setCloseBtnListener(closeButton, framingWindow);
+}
+// ==================================================================================================================
+
+// ------------------------------------------------------------------------------------------------------------------
+// ------------------------------ ВАЛИДАЦИЯ ФОРМЫ -------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------
+comment.addEventListener('input', function (evt) {
+  var messageText = '';
+  var evtTarget = evt.target;
+  if (evtTarget.value.length > MAX_COMMENT_LENGTH) {
+    messageText = 'Максимальная длина содержимого поля' + MAX_COMMENT_LENGTH;
+  }
+  evtTarget.setCustomValidity(messageText);
+});
+
+frameSize.addEventListener('change', function (evt) {
+  var value = parseInt(evt.target.value, 10);
+  if (value % 25 !== 0) {
+    evt.target.value = Math.ceil(value / 25) * 25 + '%';
+  }
+});
+
+framingWindow.querySelector('.upload-resize-controls').addEventListener('click', function (evt) {
+  var evtTarget = evt.target;
+  if ((evtTarget.classList.contains('upload-resize-controls-button-dec')) && (frameSize.value)) {
+    frameSize.value = parseInt(frameSize.value, 10) - 25 + '%';
+  } else if (evt.target.classList.contains('upload-resize-controls-button-inc')) {
+    frameSize.value = parseInt(frameSize.value, 10) + 25 + '%';
+  }
+});
+
+// ==================================================================================================================
 
 /* ------------- Выводим все на страницу ----------------------------*/
 function fillPage() {
   setPicturesObjArray();
   appendPicturesToDOM(picturesArray);
   setGalleryListeners();
+  setFramingListeners();
 }
 
 fillPage();
