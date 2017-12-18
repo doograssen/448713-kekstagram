@@ -22,6 +22,68 @@ var pickFile = uploadForm.querySelector('#upload-file');
 var framingWindow = uploadForm.querySelector('.upload-overlay');
 var comment = framingWindow.querySelector('.upload-form-description');
 var frameSize = framingWindow.querySelector('.upload-resize-controls-value');
+var effectControls = framingWindow.querySelector('.upload-effect-controls');
+var imageSample = uploadForm.querySelector('.effect-image-preview');
+var imagePreview = {
+  currentSize: '100%',
+  currentEffect: 'none',
+  imageSizes: {'25%': 'image-size-s', '50%': 'image-size-m', '75%': 'image-size-l', '100%': 'image-size-xl'},
+  incrementSizeValue: function () {
+    var size = parseInt(this.currentSize, 10);
+    if (size !== 100) {
+      size += 25;
+      frameSize.value = size + '%';
+      this.setImagePreviewSize();
+    }
+  },
+  decrementSizeValue: function () {
+    var size = parseInt(this.currentSize, 10);
+    if (size !== 25) {
+      size -= 25;
+      frameSize.value = size + '%';
+      this.setImagePreviewSize();
+    }
+  },
+  setImagePreviewSize: function () {
+    var sizeClass = this.getImageSizeClass();
+    if (imageSample.classList.contains(sizeClass)) {
+      imageSample.classList.remove(sizeClass);
+    }
+    this.currentSize = frameSize.value;
+    imageSample.classList.add(this.getImageSizeClass());
+  },
+  getImageSizeClass: function () {
+    return this.imageSizes[this.currentSize];
+  },
+  getImageEffectClass: function () {
+    return 'effect-' + this.currentEffect;
+  },
+  setImagePreviewEffect: function (value) {
+    var effectClass = this.getImageEffectClass();
+    if (imageSample.classList.contains(effectClass)) {
+      imageSample.classList.remove(effectClass);
+    }
+    this.currentEffect = value;
+    if (value !== 'none') {
+      effectClass = this.getImageEffectClass();
+      imageSample.classList.add(effectClass);
+    }
+  },
+  resetPreview: function () {
+    var size = this.getImageSizeClass();
+    if (imageSample.classList.contains(size)) {
+      imageSample.classList.remove(size);
+    }
+    var effect = this.getImageEffectClass();
+    if (imageSample.classList.contains(effect)) {
+      imageSample.classList.remove(effect);
+    }
+    this.currentSize = '100%';
+    this.currentEffect = 'none';
+    imageSample.classList.add(this.getImageSizeClass());
+    frameSize.value = '100%';
+  }
+};
 var listener;
 /* функция для случайного числа от мин до макс */
 function getRandomValue(min, max) {
@@ -81,6 +143,7 @@ function appendPicturesToDOM(arr) {
 // ------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------- ОПИСАНИЕ СОБЫТИЙ ----------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------
+
 /* функция показа окна с одним из фото */
 function showPictureSample(obj) {
   overlay.querySelector('.gallery-overlay-image').src = obj.url;
@@ -155,6 +218,7 @@ function setGalleryListeners() {
 
 function setFramingListeners() {
   pickFile.addEventListener('change', function () {
+    imagePreview.resetPreview();
     showPopup(framingWindow);
   });
   var closeButton = uploadForm.querySelector('.upload-form-cancel');
@@ -163,7 +227,7 @@ function setFramingListeners() {
 // ==================================================================================================================
 
 // ------------------------------------------------------------------------------------------------------------------
-// ------------------------------ ВАЛИДАЦИЯ ФОРМЫ -------------------------------------------------------------------
+// ------------------------------ СОБЫТИЯ ФОРМЫ -------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------
 comment.addEventListener('input', function (evt) {
   var messageText = '';
@@ -183,10 +247,17 @@ frameSize.addEventListener('change', function (evt) {
 
 framingWindow.querySelector('.upload-resize-controls').addEventListener('click', function (evt) {
   var evtTarget = evt.target;
-  if ((evtTarget.classList.contains('upload-resize-controls-button-dec')) && (frameSize.value)) {
-    frameSize.value = parseInt(frameSize.value, 10) - 25 + '%';
+  if (evtTarget.classList.contains('upload-resize-controls-button-dec')) {
+    imagePreview.decrementSizeValue();
   } else if (evt.target.classList.contains('upload-resize-controls-button-inc')) {
-    frameSize.value = parseInt(frameSize.value, 10) + 25 + '%';
+    imagePreview.incrementSizeValue();
+  }
+});
+
+effectControls.addEventListener('click', function (evt) {
+  var evtTarget = evt.target;
+  if (evtTarget.type === 'radio') {
+    imagePreview.setImagePreviewEffect(evtTarget.value);
   }
 });
 

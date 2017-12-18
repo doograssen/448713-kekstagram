@@ -864,3 +864,19 @@ input[type=radio]:checked + .upload-effect-label .upload-effect-preview {
 .footer-social-item-vk {
   background-position: -84px 0;
 }
+
+.image-size-s {
+  transform: scale(0.25);
+}
+
+.image-size-m {
+  transform: scale(0.5);
+}
+
+.image-size-l {
+  transform: scale(0.75);
+}
+
+.image-size-xl {
+  transform: scale(1);
+}
