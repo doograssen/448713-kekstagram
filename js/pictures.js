@@ -24,6 +24,39 @@ var comment = framingWindow.querySelector('.upload-form-description');
 var frameSize = framingWindow.querySelector('.upload-resize-controls-value');
 var effectControls = framingWindow.querySelector('.upload-effect-controls');
 var imageSample = uploadForm.querySelector('.effect-image-preview');
+var hashTagInput = uploadForm.querySelector('.upload-form-hashtags');
+var hashTagString = {
+  tagsStringArray: [],
+  setTagsArray: function () {
+    this.tagsStringArray = hashTagInput.value.split(' ');
+  },
+  validateLength: function () {
+    return (this.tagsStringArray.length <= 5);
+  },
+  validateHash: function () {
+    var correctHash = true;
+    var i = 0;
+    var arraylength = this.tagsStringArray.length;
+    function checkUnicPos(tag) {
+      var position = tag.indexOf('#');
+      return ((tag.indexOf('#', position + 1) === -1) && !position);
+    }
+    while ((i < arraylength) && (correctHash)) {
+      correctHash = checkUnicPos(this.tagsStringArray[i]);
+      i++;
+    }
+    return correctHash;
+  },
+  setMessage: function () {
+    var message = '';
+    if (!this.validateHash()) {
+      message = 'Проверьте правильность ввода хештегов';
+    } else if (!this.validateLength()) {
+      message = 'Максимальное количество хештегов - 5';
+    }
+    return message;
+  }
+};
 var imagePreview = {
   currentSize: '100%',
   currentEffect: 'none',
@@ -84,9 +117,7 @@ var imagePreview = {
     frameSize.value = '100%';
   }
 };
-var hashTagInput = uploadForm.querySelector('.upload-form-hashtags');
 var listener;
-var hashTagArray = [];
 /* функция для случайного числа от мин до макс */
 function getRandomValue(min, max) {
   return min + Math.round((max - min) * Math.random());
@@ -263,13 +294,7 @@ effectControls.addEventListener('click', function (evt) {
   }
 });
 
-
-function validateHashTags(string) {
-  var arr = string.split(' #');
-  return '';
-}
-
-hashTagInput.addEventListener('keyup', function (evt) {
+/* hashTagInput.addEventListener('keyup', function (evt) {
   console.log(evt.target.value.length);
   if (evt.keyCode === 32) {
     evt.target.value = evt.target.value.replace(/$/, ' #');
@@ -286,10 +311,11 @@ hashTagInput.addEventListener('keypress', function (evt) {
       evt.preventDefault();
     }
   }
-});
+});*/
 
-hashTagInput.addEventListener('blur', function (evt) {
-  var message = validateHashTags();
+hashTagInput.addEventListener('change', function (evt) {
+  hashTagString.setTagsArray();
+  var message = hashTagString.setMessage();
   evt.target.setCustomValidity(message);
 });
 
