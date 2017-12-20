@@ -84,7 +84,9 @@ var imagePreview = {
     frameSize.value = '100%';
   }
 };
+var hashTagInput = uploadForm.querySelector('.upload-form-hashtags');
 var listener;
+var hashTagArray = [];
 /* функция для случайного числа от мин до макс */
 function getRandomValue(min, max) {
   return min + Math.round((max - min) * Math.random());
@@ -260,6 +262,37 @@ effectControls.addEventListener('click', function (evt) {
     imagePreview.setImagePreviewEffect(evtTarget.value);
   }
 });
+
+
+function validateHashTags(string) {
+  var arr = string.split(' #');
+  return '';
+}
+
+hashTagInput.addEventListener('keyup', function (evt) {
+  console.log(evt.target.value.length);
+  if (evt.keyCode === 32) {
+    evt.target.value = evt.target.value.replace(/$/, ' #');
+  } else if (evt.target.value.length === 1) {
+    evt.target.value = evt.target.value.replace(/^/, '#');
+  }
+});
+
+hashTagInput.addEventListener('keypress', function (evt) {
+  if (evt.keyCode === 35) {
+    if ((evt.target.value.slice(-1) !== '#') && (evt.target.value.length !== 0)) {
+      evt.target.value = evt.target.value + ' ';
+    } else if (evt.target.value.slice(-1) === '#') {
+      evt.preventDefault();
+    }
+  }
+});
+
+hashTagInput.addEventListener('blur', function (evt) {
+  var message = validateHashTags();
+  evt.target.setCustomValidity(message);
+});
+
 
 // ==================================================================================================================
 
