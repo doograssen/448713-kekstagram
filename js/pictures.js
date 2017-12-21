@@ -27,11 +27,28 @@ var imageSample = uploadForm.querySelector('.effect-image-preview');
 var hashTagInput = uploadForm.querySelector('.upload-form-hashtags');
 var hashTagString = {
   tagsStringArray: [],
-  setTagsArray: function () {
-    this.tagsStringArray = hashTagInput.value.split(' ');
+  tagsCount: 0,
+  validateChecks: {
+    count: false,
+    hash: false,
+    length: false,
+    dublicate: false
   },
-  validateLength: function () {
-    return (this.tagsStringArray.length <= 5);
+  message: '',
+  iniTagsString: function () {
+    var string = hashTagInput.value.replace(/\s+/g, ' ');
+    string = string.trim();
+    this.tagsStringArray = string.split(' ');
+    this.tagsCount = this.tagsStringArray.length;
+    this.validateChecks.count = this.validateCount();
+    this.validateChecks.hash = this.validateHash();
+    this.validateChecks.length = this.validateLength();
+    this.validateChecks.dublicate = this.validateDublicat(this.tagsStringArray);
+    this.setMessage();
+    // console.log(this.message);
+  },
+  validateCount: function () {
+    return (this.tagsCount <= 5);
   },
   validateHash: function () {
     var correctHash = true;
@@ -47,14 +64,39 @@ var hashTagString = {
     }
     return correctHash;
   },
-  setMessage: function () {
-    var message = '';
-    if (!this.validateHash()) {
-      message = 'Проверьте правильность ввода хештегов';
-    } else if (!this.validateLength()) {
-      message = 'Максимальное количество хештегов - 5';
+  validateLength: function () {
+    var i = 0;
+    var hashtagCorrectLength = true;
+    while (i < this.tagsCount) {
+      var length = this.tagsStringArray[i].length;
+      if ((length === 1) || (length > 20)) {
+        hashtagCorrectLength = false;
+        break;
+      }
+      i++;
     }
-    return message;
+    return hashtagCorrectLength;
+  },
+  validateDublicat: function (arr) {
+    var obj = {};
+    for (var i = 0; i < arr.length; i++) {
+      var str = arr[i].toLowerCase();
+      obj[str] = true; // запомнить строку в виде свойства объекта
+    }
+    // console.log(Object.keys(obj));
+    return (Object.keys(obj).length - arr.length); // или собрать ключи перебором для IE8-
+  },
+  setMessage: function () {
+    this.message = '';
+    if (!this.validateChecks.hash) {
+      this.message = 'Проверьте правильность ввода хештегов';
+    } else if (!this.validateChecks.count) {
+      this.message = 'Максимальное количество хештегов - пять';
+    } else if (!this.validateChecks.length) {
+      this.message = 'Тег должен быть не длиннее 20-ти символов и не короче одного';
+    } else if (this.validateChecks.dublicate) {
+      this.message = 'Теги должны быть уникальными';
+    }
   }
 };
 var imagePreview = {
@@ -314,9 +356,9 @@ hashTagInput.addEventListener('keypress', function (evt) {
 });*/
 
 hashTagInput.addEventListener('change', function (evt) {
-  hashTagString.setTagsArray();
-  var message = hashTagString.setMessage();
-  evt.target.setCustomValidity(message);
+  hashTagString.iniTagsString();
+  // console.log(hashTagString);
+  evt.target.setCustomValidity(hashTagString.message);
 });
 
 
