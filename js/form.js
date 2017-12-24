@@ -68,13 +68,12 @@
       for (var i = 0; i < arr.length; i++) {
         var str = arr[i].toLowerCase();
         if (str in obj) {
-          break;
+          return true;
         } else {
           obj[str] = true; // запомнить строку в виде свойства объекта
         }
       }
-      // console.log(Object.keys(obj));
-      return (Object.keys(obj).length - arr.length);
+      return false;
     },
     setMessage: function () {
       this.message = '';
