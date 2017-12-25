@@ -9,11 +9,12 @@
   var uploadForm = document.querySelector('#upload-select-image');
   var pickFile = uploadForm.querySelector('#upload-file');
   var framingWindow = uploadForm.querySelector('.upload-overlay');
+  var picturesDOMElements = document.querySelector('.pictures');
   window.data.setPicturesObjArray(OBJECT_AMOUNT);
-  window.picture.appendPicturesToDOM(window.data.picturesArray);
+  window.picture.appendPicturesToDOM(picturesDOMElements);
   // ````````
   /* ---- Закрытие окна по нажатию ESC --------------------------------*/
-  function addListenerToElem(elem) {
+  function setListenerToElem(elem) {
     return function onPopupEscPress(evt) {
       if ((evt.keyCode === ESC_KEY_CODE) && (evt.target.nodeName !== 'TEXTAREA')) {
         closePopup(elem);
@@ -22,9 +23,8 @@
   }
   /* ------ Показ окна с  фото ----------------------------------------*/
   function showPopup(elem) {
-    // showPictureSample(picturesArray[index]);
     elem.classList.remove('hidden');
-    listener = addListenerToElem(elem);
+    listener = setListenerToElem(elem);
     document.addEventListener('keydown', listener);
   }
 
@@ -53,23 +53,17 @@
   function setPictureListeners(obj, index) {
     obj.addEventListener('click', function (evt) {
       evt.preventDefault();
-      window.preview.showPictureSample(window.data.picturesArray[index]);
+      window.preview.showPictureSample(picturesDOMElements[index]);
       showPopup(overlay);
-    });
-    obj.addEventListener('keydown', function (evt) {
-      if (evt.keyCode === ENTER_KEY_CODE) {
-        evt.preventDefault();
-        window.preview.showPictureSample(window.data.picturesArray[index]);
-        showPopup(overlay);
-      }
     });
   }
 
   /* ------ Назначение обработчиков событий для галереи ---------------*/
   function setGalleryListeners() {
-    var elementArray = window.picture.pictures.querySelectorAll('.picture');
-    for (var i = 0; i < OBJECT_AMOUNT; i++) {
-      setPictureListeners(elementArray[i], i);
+    var arrayElements = window.picture.pictures.querySelectorAll('.picture');
+    var arrayLength = arrayElements.length;
+    for (var i = 0; i < arrayLength; i++) {
+      setPictureListeners(arrayElements[i], i);
     }
     var closeButton = overlay.querySelector('.gallery-overlay-close');
     setCloseBtnListener(closeButton, overlay);

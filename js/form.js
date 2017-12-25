@@ -2,6 +2,11 @@
 
 (function () {
   var MAX_COMMENT_LENGTH = 140;
+  var MIN_PERCENTAGE_SIZE = 25;
+  var MAX_PERCENTAGE_SIZE = 100;
+  var INITIAL_PERCENTAGE_SIZE = 100;
+  var PERCENTAGE_SIZE_INDENT = 25;
+  var INITIAL_PICTURE_EFFECT = 'none';
   var uploadForm = document.querySelector('#upload-select-image');
   var framingWindow = uploadForm.querySelector('.upload-overlay');
   var effectControls = framingWindow.querySelector('.upload-effect-controls');
@@ -10,9 +15,9 @@
   var imageSample = uploadForm.querySelector('.effect-image-preview');
   var comment = framingWindow.querySelector('.upload-form-description');
   var hashTagString = {
-    tagsStringArray: [],
+    pistureHashtags: [],
     tagsCount: 0,
-    validateChecks: {
+    tagChecks: {
       count: false,
       hash: false,
       length: false,
@@ -22,14 +27,13 @@
     iniTagsString: function () {
       var string = hashTagInput.value.replace(/\s+/g, ' ');
       string = string.trim();
-      this.tagsStringArray = string.split(' ');
-      this.tagsCount = this.tagsStringArray.length;
-      this.validateChecks.count = this.validateCount();
-      this.validateChecks.hash = this.validateHash();
-      this.validateChecks.length = this.validateLength();
-      this.validateChecks.dublicate = this.validateDublicat(this.tagsStringArray);
+      this.pistureHashtags = string.split(' ');
+      this.tagsCount = this.pistureHashtags.length;
+      this.tagChecks.count = this.validateCount();
+      this.tagChecks.hash = this.validateHash();
+      this.tagChecks.length = this.validateLength();
+      this.tagChecks.dublicate = this.validateDublicat(this.pistureHashtags);
       this.setMessage();
-      // console.log(this.message);
     },
     validateCount: function () {
       return (this.tagsCount <= 5);
@@ -37,15 +41,10 @@
     validateHash: function () {
       var correctHash = true;
       var i = 0;
-      var arraylength = this.tagsStringArray.length;
-
-      function checkUnicPos(tag) {
-        var position = tag.indexOf('#');
-        return ((tag.indexOf('#', position + 1) === -1) && !position);
-      }
+      var arraylength = this.pistureHashtags.length;
 
       while ((i < arraylength) && (correctHash)) {
-        correctHash = checkUnicPos(this.tagsStringArray[i]);
+        correctHash = (this.pistureHashtags[i].lastIndexOf('#') === 0);
         i++;
       }
       return correctHash;
@@ -54,7 +53,7 @@
       var i = 0;
       var hashtagCorrectLength = true;
       while (i < this.tagsCount) {
-        var length = this.tagsStringArray[i].length;
+        var length = this.pistureHashtags[i].length;
         if ((length === 1) || (length > 20)) {
           hashtagCorrectLength = false;
           break;
@@ -77,39 +76,39 @@
     },
     setMessage: function () {
       this.message = '';
-      if (!this.validateChecks.hash) {
+      if (!this.tagChecks.hash) {
         this.message = 'Проверьте правильность ввода хештегов';
-      } else if (!this.validateChecks.count) {
+      } else if (!this.tagChecks.count) {
         this.message = 'Максимальное количество хештегов - пять';
-      } else if (!this.validateChecks.length) {
+      } else if (!this.tagChecks.length) {
         this.message = 'Тег должен быть не длиннее 20-ти символов и не короче одного';
-      } else if (this.validateChecks.dublicate) {
+      } else if (this.tagChecks.dublicate) {
         this.message = 'Теги должны быть уникальными';
       }
     }
   };
 
   var imagePreview = {
-    currentSize: '100%',
-    currentEffect: 'none',
+    currentSize: INITIAL_PERCENTAGE_SIZE + '%',
+    currentEffect: INITIAL_PICTURE_EFFECT,
     imageSizes: {'25%': 'image-size-s', '50%': 'image-size-m', '75%': 'image-size-l', '100%': 'image-size-xl'},
     incrementSizeValue: function () {
       var size = parseInt(this.currentSize, 10);
-      if (size !== 100) {
-        size += 25;
+      if (size !== MAX_PERCENTAGE_SIZE) {
+        size += PERCENTAGE_SIZE_INDENT;
         frameSize.value = size + '%';
-        this.setImagePreviewSize();
+        this.setImageSizeClass();
       }
     },
     decrementSizeValue: function () {
       var size = parseInt(this.currentSize, 10);
-      if (size !== 25) {
-        size -= 25;
+      if (size !== MIN_PERCENTAGE_SIZE) {
+        size -= PERCENTAGE_SIZE_INDENT;
         frameSize.value = size + '%';
-        this.setImagePreviewSize();
+        this.setImageSizeClass();
       }
     },
-    setImagePreviewSize: function () {
+    setImageSizeClass: function () {
       var sizeClass = this.getImageSizeClass();
       if (imageSample.classList.contains(sizeClass)) {
         imageSample.classList.remove(sizeClass);
@@ -143,8 +142,8 @@
       if (imageSample.classList.contains(effect)) {
         imageSample.classList.remove(effect);
       }
-      this.currentSize = '100%';
-      this.currentEffect = 'none';
+      this.currentSize = INITIAL_PERCENTAGE_SIZE;
+      this.currentEffect = INITIAL_PICTURE_EFFECT;
       imageSample.classList.add(this.getImageSizeClass());
       frameSize.value = '100%';
     }
@@ -156,13 +155,6 @@
       messageText = 'Максимальная длина содержимого поля' + MAX_COMMENT_LENGTH;
     }
     evtTarget.setCustomValidity(messageText);
-  });
-
-  frameSize.addEventListener('change', function (evt) {
-    var value = parseInt(evt.target.value, 10);
-    if (value % 25 !== 0) {
-      evt.target.value = Math.ceil(value / 25) * 25 + '%';
-    }
   });
 
   framingWindow.querySelector('.upload-resize-controls').addEventListener('click', function (evt) {
@@ -183,7 +175,6 @@
 
   hashTagInput.addEventListener('change', function (evt) {
     hashTagString.iniTagsString();
-    // console.log(hashTagString);
     evt.target.setCustomValidity(hashTagString.message);
   });
 

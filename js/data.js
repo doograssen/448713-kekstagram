@@ -32,11 +32,11 @@
   }
 
   window.data = {
-    picturesArray: [],
+    pictures: [],
     /* -------- Функция заполнения массива с информацией о фотографиях --*/
     setPicturesObjArray: function (amount) {
       for (var i = 0; i < amount; i++) {
-        this.picturesArray[i] = setPictureObj(i + 1);
+        this.pictures[i] = setPictureObj(i + 1);
       }
     }
   };
