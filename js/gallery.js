@@ -48,6 +48,7 @@
   function setFramingListeners() {
     pickFile.addEventListener('change', function () {
       window.form.resetImage();
+      window.form.resetEffect();
       window.utils.showPopup(framingWindow);
     });
     var closeButton = uploadForm.querySelector('.upload-form-cancel');

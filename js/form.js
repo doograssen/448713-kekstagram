@@ -7,6 +7,8 @@
   var INITIAL_PERCENTAGE_SIZE = 100;
   var PERCENTAGE_SIZE_INDENT = 25;
   var INITIAL_PICTURE_EFFECT = 'none';
+  var INITIAL_EFFECT_VALUE = 100;
+  var effectLineLevelLenght = 455;
   var uploadForm = document.querySelector('#upload-select-image');
   var framingWindow = uploadForm.querySelector('.upload-overlay');
   var effectControls = framingWindow.querySelector('.upload-effect-controls');
@@ -148,6 +150,32 @@
       frameSize.value = '100%';
     }
   };
+
+  var effectLevelHandle = {
+    effectRangeElement: framingWindow.querySelector('.upload-effect-level'),
+    handleElement: framingWindow.querySelector('.upload-effect-level-pin'),
+    effectValueLine: framingWindow.querySelector('.upload-effect-level-val'),
+    effectNumberInput: framingWindow.querySelector('.upload-effect-level-value'),
+    currentValue: null,
+    iniHandle: function () {
+      this.currentValue = INITIAL_EFFECT_VALUE;
+      this.setHandlePosition(this.currentValue);
+      this.effectNumberInput.value = INITIAL_EFFECT_VALUE;
+    },
+    displayEffectRangeElement: function (effect) {
+      if (effect !== 'none') {
+        this.effectRangeElement.style.display = 'block';
+        this.iniHandle();
+      } else {
+        this.effectRangeElement.style.display = 'none';
+      }
+    },
+    setHandlePosition: function (value) {
+      this.handleElement.style.left = value + '%';
+      this.effectValueLine.style.width = value + '%';
+    }
+  };
+
   comment.addEventListener('input', function (evt) {
     var messageText = '';
     var evtTarget = evt.target;
@@ -170,6 +198,7 @@
     var evtTarget = evt.target;
     if (evtTarget.type === 'radio') {
       imagePreview.setImagePreviewEffect(evtTarget.value);
+      effectLevelHandle.displayEffectRangeElement(evtTarget.value);
     }
   });
 
@@ -181,6 +210,9 @@
   window.form = {
     resetImage: function () {
       imagePreview.resetPreview();
+    },
+    resetEffect: function () {
+      effectLevelHandle.displayEffectRangeElement(INITIAL_PICTURE_EFFECT);
     }
   };
 })();
