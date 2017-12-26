@@ -13,12 +13,12 @@
 
   /* ---------- Функция заполнения страницы фотографиями --------------*/
   window.picture = {
-    appendPicturesToDOM: function (arr) {
+    appendPicturesToFragment: function (arr) {
       var fragment = document.createDocumentFragment();
       for (var i = 0; i < arr.length; i++) {
         fragment.appendChild(fillTemplate(arr[i]));
       }
-      this.pictures.appendChild(fragment);
+      return fragment;
     }
   };
 })();
