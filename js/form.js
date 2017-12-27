@@ -8,7 +8,8 @@
   var PERCENTAGE_SIZE_INDENT = 25;
   var INITIAL_PICTURE_EFFECT = 'none';
   var EFFECT_INPUT_MIN_VALUE = '0';
-  var effectLineLevelLenght = 455;
+  var START_RANGE_COORDINATE = 0;
+  var END_RANGE_COORDINATE = 455;
   var uploadForm = document.querySelector('#upload-select-image');
   var framingWindow = uploadForm.querySelector('.upload-overlay');
   var effectNumberInput = framingWindow.querySelector('.upload-effect-level-value');
@@ -158,16 +159,20 @@
 
   var effectLevelHandle = {
     effectInputMaxValues: {'none': 0, 'chrome': 100, 'sepia': 100, 'marvin': 100, 'phobos': 3, 'heat': 300},
-    currentPercentageValue: 0,
+    currentValue: 0,
+    currentXCoordinate: 0,
+    leftLineBorder: 0,
+    rightLineBorder: 0,
 
     displayEffectRangeElement: function (effect) {
       if (effect !== 'none') {
         effectRangeElement.style.display = 'block';
-        this.currentPercentageValue = this.effectInputMaxValues[effect];
-        effectNumberInput.value = this.currentPercentageValue;
-        effectNumberInput.setAttribute('max', String(this.currentPercentageValue));
+        this.currentValue = this.effectInputMaxValues[effect];
+        effectNumberInput.value = this.currentValue;
+        effectNumberInput.setAttribute('max', String(this.currentValue));
         effectNumberInput.setAttribute('min', EFFECT_INPUT_MIN_VALUE);
-        this.setHandlePosition(this.currentPercentageValue);
+        this.setHandlePosition(this.currentValue);
+        this.setBorders();
       } else {
         effectRangeElement.style.display = 'none';
       }
@@ -176,21 +181,38 @@
       var position = Math.floor((value / effectNumberInput.getAttribute('max')) * 100) + '%';
       handleElement.style.left = position;
       effectValueLine.style.width = position;
+    },
+    setBorders: function () {
+      this.leftLineBorder = effectLevelLine.getBoundingClientRect().left;
+      this.rightLineBorder = effectLevelLine.getBoundingClientRect().right;
+      this.currentXCoordinate = END_RANGE_COORDINATE;
+    },
+    setNextStepCoordinate: function (x) {
+      return Math.round((x / END_RANGE_COORDINATE) * 100);
     }
   };
 
   handleElement.addEventListener('mousedown', function (evt) {
     evt.preventDefault();
-    console.log(effectLevelLine.getBoundingClientRect().left + ' ' + evt.clientX);
-    var startXCoords = evt.clientX;
+    var startXCoordinate = evt.clientX; // координата Х указателя относительно окна
+
     function onMouseMove(moveEvt) {
       moveEvt.preventDefault();
-
-      var shiftX = startXCoords - moveEvt.clientX;
-
-      startXCoords = moveEvt.clientX;
-      evt.target.style.left = (evt.target.offsetLeft - shiftX) + 'px';
-    };
+      if ((moveEvt.clientX >= effectLevelHandle.leftLineBorder) && (moveEvt.clientX <= effectLevelHandle.rightLineBorder)) {
+        var shiftX = startXCoordinate - moveEvt.clientX;
+        var nextXCoordinate = effectLevelHandle.currentXCoordinate - shiftX;
+        startXCoordinate = moveEvt.clientX;
+        if ((nextXCoordinate >= START_RANGE_COORDINATE) && (nextXCoordinate <= END_RANGE_COORDINATE)) {
+          effectLevelHandle.currentXCoordinate = nextXCoordinate;
+          evt.target.style.left = effectLevelHandle.setNextStepCoordinate(nextXCoordinate) + '%';
+          effectNumberInput.value = effectLevelHandle.setNextStepCoordinate(nextXCoordinate);
+        }
+      } else if (moveEvt.clientX < effectLevelHandle.leftLineBorder) {
+        evt.target.style.left = START_RANGE_COORDINATE + 'px';
+      } else {
+        evt.target.style.left = END_RANGE_COORDINATE + 'px';
+      }
+    }
 
     var onMouseUp = function (upEvt) {
       upEvt.preventDefault();
@@ -201,6 +223,10 @@
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+  });
+
+  window.addEventListener('resize', function () {
+    effectLevelHandle.setBorders();
   });
 
   effectNumberInput.addEventListener('input', function (evt) {
