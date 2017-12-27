@@ -7,10 +7,15 @@
   var INITIAL_PERCENTAGE_SIZE = 100;
   var PERCENTAGE_SIZE_INDENT = 25;
   var INITIAL_PICTURE_EFFECT = 'none';
-  var INITIAL_EFFECT_VALUE = 100;
+  var EFFECT_INPUT_MIN_VALUE = '0';
   var effectLineLevelLenght = 455;
   var uploadForm = document.querySelector('#upload-select-image');
   var framingWindow = uploadForm.querySelector('.upload-overlay');
+  var effectNumberInput = framingWindow.querySelector('.upload-effect-level-value');
+  var effectValueLine = framingWindow.querySelector('.upload-effect-level-val');
+  var effectLevelLine = framingWindow.querySelector('.upload-effect-level-line');
+  var effectRangeElement = framingWindow.querySelector('.upload-effect-level');
+  var handleElement = framingWindow.querySelector('.upload-effect-level-pin');
   var effectControls = framingWindow.querySelector('.upload-effect-controls');
   var hashTagInput = uploadForm.querySelector('.upload-form-hashtags');
   var frameSize = framingWindow.querySelector('.upload-resize-controls-value');
@@ -152,29 +157,55 @@
   };
 
   var effectLevelHandle = {
-    effectRangeElement: framingWindow.querySelector('.upload-effect-level'),
-    handleElement: framingWindow.querySelector('.upload-effect-level-pin'),
-    effectValueLine: framingWindow.querySelector('.upload-effect-level-val'),
-    effectNumberInput: framingWindow.querySelector('.upload-effect-level-value'),
-    currentValue: null,
-    iniHandle: function () {
-      this.currentValue = INITIAL_EFFECT_VALUE;
-      this.setHandlePosition(this.currentValue);
-      this.effectNumberInput.value = INITIAL_EFFECT_VALUE;
-    },
+    effectInputMaxValues: {'none': 0, 'chrome': 100, 'sepia': 100, 'marvin': 100, 'phobos': 3, 'heat': 300},
+    currentPercentageValue: 0,
+
     displayEffectRangeElement: function (effect) {
       if (effect !== 'none') {
-        this.effectRangeElement.style.display = 'block';
-        this.iniHandle();
+        effectRangeElement.style.display = 'block';
+        this.currentPercentageValue = this.effectInputMaxValues[effect];
+        effectNumberInput.value = this.currentPercentageValue;
+        effectNumberInput.setAttribute('max', String(this.currentPercentageValue));
+        effectNumberInput.setAttribute('min', EFFECT_INPUT_MIN_VALUE);
+        this.setHandlePosition(this.currentPercentageValue);
       } else {
-        this.effectRangeElement.style.display = 'none';
+        effectRangeElement.style.display = 'none';
       }
     },
     setHandlePosition: function (value) {
-      this.handleElement.style.left = value + '%';
-      this.effectValueLine.style.width = value + '%';
+      var position = Math.floor((value / effectNumberInput.getAttribute('max')) * 100) + '%';
+      handleElement.style.left = position;
+      effectValueLine.style.width = position;
     }
   };
+
+  handleElement.addEventListener('mousedown', function (evt) {
+    evt.preventDefault();
+    console.log(effectLevelLine.getBoundingClientRect().left + ' ' + evt.clientX);
+    var startXCoords = evt.clientX;
+    function onMouseMove(moveEvt) {
+      moveEvt.preventDefault();
+
+      var shiftX = startXCoords - moveEvt.clientX;
+
+      startXCoords = moveEvt.clientX;
+      evt.target.style.left = (evt.target.offsetLeft - shiftX) + 'px';
+    };
+
+    var onMouseUp = function (upEvt) {
+      upEvt.preventDefault();
+
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+
+  effectNumberInput.addEventListener('input', function (evt) {
+    effectLevelHandle.setHandlePosition(evt.target.value);
+  });
 
   comment.addEventListener('input', function (evt) {
     var messageText = '';
@@ -208,11 +239,12 @@
   });
 
   window.form = {
+    effect: imagePreview.currentEffect,
     resetImage: function () {
       imagePreview.resetPreview();
     },
-    resetEffect: function () {
-      effectLevelHandle.displayEffectRangeElement(INITIAL_PICTURE_EFFECT);
+    resetEffect: function (effect) {
+      effectLevelHandle.displayEffectRangeElement(effect);
     }
   };
 })();
