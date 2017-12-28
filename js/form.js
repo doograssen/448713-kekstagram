@@ -4,7 +4,7 @@
   var MAX_COMMENT_LENGTH = 140;
   var MIN_PERCENTAGE_SIZE = 25;
   var MAX_PERCENTAGE_SIZE = 100;
-  var INITIAL_PERCENTAGE_SIZE = 100;
+  var INITIAL_PERCENTAGE_SIZE = '100%';
   var PERCENTAGE_SIZE_INDENT = 25;
   var INITIAL_PICTURE_EFFECT = 'none';
   var EFFECT_INPUT_MIN_VALUE = '0';
@@ -97,7 +97,7 @@
   };
 
   var imagePreview = {
-    currentSize: INITIAL_PERCENTAGE_SIZE + '%',
+    currentSize: INITIAL_PERCENTAGE_SIZE,
     currentEffect: INITIAL_PICTURE_EFFECT,
     imageSizes: {'25%': 'image-size-s', '50%': 'image-size-m', '75%': 'image-size-l', '100%': 'image-size-xl'},
     incrementSizeValue: function () {
@@ -130,13 +130,16 @@
     getImageEffectClass: function () {
       return 'effect-' + this.currentEffect;
     },
-    setImagePreviewEffect: function (value) {
+    setImageEffect: function (effectName) {
       var effectClass = this.getImageEffectClass();
       if (imageSample.classList.contains(effectClass)) {
         imageSample.classList.remove(effectClass);
+        if (imageSample.hasAttribute('style')) {
+          imageSample.removeAttribute('style');
+        }
       }
-      this.currentEffect = value;
-      if (value !== 'none') {
+      this.currentEffect = effectName;
+      if (effectName !== 'none') {
         effectClass = this.getImageEffectClass();
         imageSample.classList.add(effectClass);
       }
@@ -149,6 +152,9 @@
       var effect = this.getImageEffectClass();
       if (imageSample.classList.contains(effect)) {
         imageSample.classList.remove(effect);
+        if (imageSample.hasAttribute('style')) {
+          imageSample.removeAttribute('style');
+        }
       }
       this.currentSize = INITIAL_PERCENTAGE_SIZE;
       this.currentEffect = INITIAL_PICTURE_EFFECT;
@@ -158,37 +164,71 @@
   };
 
   var effectLevelHandle = {
-    effectInputMaxValues: {'none': 0, 'chrome': 100, 'sepia': 100, 'marvin': 100, 'phobos': 3, 'heat': 300},
-    currentValue: 0,
+    effectInputMaxValues: {'none': 0, 'chrome': 100, 'sepia': 100, 'marvin': 100, 'phobos': 5, 'heat': 300},
+    effectNames: {'none': 0, 'chrome': 'grayscale', 'sepia': 'sepia', 'marvin': 'invert', 'phobos': 'blur', 'heat': 'brightness'},
+    currentInputMax: 0,
+    currentEffectValue: 0,
     currentXCoordinate: 0,
     leftLineBorder: 0,
     rightLineBorder: 0,
 
+    iniEffectRangeElement: function (value) {
+      this.currentEffectValue = value;
+      this.currentInputMax = this.currentEffectValue;
+      effectNumberInput.value = this.currentEffectValue;
+      effectNumberInput.setAttribute('max', String(this.currentEffectValue));
+      effectNumberInput.setAttribute('min', EFFECT_INPUT_MIN_VALUE);
+      this.setHandlePosition(this.currentEffectValue);
+      this.setBorders();
+    },
+
     displayEffectRangeElement: function (effect) {
       if (effect !== 'none') {
         effectRangeElement.style.display = 'block';
-        this.currentValue = this.effectInputMaxValues[effect];
-        effectNumberInput.value = this.currentValue;
-        effectNumberInput.setAttribute('max', String(this.currentValue));
-        effectNumberInput.setAttribute('min', EFFECT_INPUT_MIN_VALUE);
-        this.setHandlePosition(this.currentValue);
-        this.setBorders();
+        this.iniEffectRangeElement(this.effectInputMaxValues[effect]);
       } else {
         effectRangeElement.style.display = 'none';
       }
     },
+
     setHandlePosition: function (value) {
-      var position = Math.floor((value / effectNumberInput.getAttribute('max')) * 100) + '%';
+      var position = ((value / effectNumberInput.getAttribute('max')) * 100).toFixed(1) + '%';
       handleElement.style.left = position;
       effectValueLine.style.width = position;
     },
+
     setBorders: function () {
       this.leftLineBorder = effectLevelLine.getBoundingClientRect().left;
       this.rightLineBorder = effectLevelLine.getBoundingClientRect().right;
       this.currentXCoordinate = END_RANGE_COORDINATE;
     },
-    setNextStepCoordinate: function (x) {
-      return Math.round((x / END_RANGE_COORDINATE) * 100);
+
+    setNextStep: function (x, elem) {
+      var value = Math.round(x * this.currentInputMax / END_RANGE_COORDINATE);
+      this.currentXCoordinate = x;
+      if (this.currentEffectValue !== value) {
+        this.currentEffectValue = value;
+        effectNumberInput.value = value;
+        var posInPercent = (effectNumberInput.value * 100 / effectLevelHandle.currentInputMax).toFixed(1) + '%';
+        elem.style.left = posInPercent;
+        effectValueLine.style.width = posInPercent;
+      }
+    },
+
+    applyImageEffect: function (element, effect) {
+      switch (effect) {
+        case 'chrome':
+        case 'sepia':
+        case 'heat':
+          element.style.filter = this.effectNames[effect] + '(' + this.currentEffectValue / 100 + ')';
+          break;
+        case 'marvin':
+          element.style.filter = this.effectNames[effect] + '(' + this.currentEffectValue + '%)';
+          break;
+        case 'phobos':
+          element.style.filter = this.effectNames[effect] + '(' + this.currentEffectValue + 'px)';
+          break;
+      }
     }
   };
 
@@ -200,17 +240,18 @@
       moveEvt.preventDefault();
       if ((moveEvt.clientX >= effectLevelHandle.leftLineBorder) && (moveEvt.clientX <= effectLevelHandle.rightLineBorder)) {
         var shiftX = startXCoordinate - moveEvt.clientX;
-        var nextXCoordinate = effectLevelHandle.currentXCoordinate - shiftX;
         startXCoordinate = moveEvt.clientX;
+        var nextXCoordinate = effectLevelHandle.currentXCoordinate - shiftX;
         if ((nextXCoordinate >= START_RANGE_COORDINATE) && (nextXCoordinate <= END_RANGE_COORDINATE)) {
-          effectLevelHandle.currentXCoordinate = nextXCoordinate;
-          evt.target.style.left = effectLevelHandle.setNextStepCoordinate(nextXCoordinate) + '%';
-          effectNumberInput.value = effectLevelHandle.setNextStepCoordinate(nextXCoordinate);
+          effectLevelHandle.setNextStep(nextXCoordinate, evt.target);
+          effectLevelHandle.applyImageEffect(imageSample, imagePreview.currentEffect);
         }
       } else if (moveEvt.clientX < effectLevelHandle.leftLineBorder) {
-        evt.target.style.left = START_RANGE_COORDINATE + 'px';
-      } else {
-        evt.target.style.left = END_RANGE_COORDINATE + 'px';
+        effectLevelHandle.setNextStep(START_RANGE_COORDINATE, evt.target);
+        effectLevelHandle.applyImageEffect(imageSample, imagePreview.currentEffect);
+      } else if (moveEvt.clientX > effectLevelHandle.rightLineBorder) {
+        effectLevelHandle.setNextStep(END_RANGE_COORDINATE, evt.target);
+        effectLevelHandle.applyImageEffect(imageSample, imagePreview.currentEffect);
       }
     }
 
@@ -254,7 +295,7 @@
   effectControls.addEventListener('click', function (evt) {
     var evtTarget = evt.target;
     if (evtTarget.type === 'radio') {
-      imagePreview.setImagePreviewEffect(evtTarget.value);
+      imagePreview.setImageEffect(evtTarget.value);
       effectLevelHandle.displayEffectRangeElement(evtTarget.value);
     }
   });
