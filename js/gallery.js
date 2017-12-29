@@ -7,10 +7,10 @@
   var uploadForm = document.querySelector('#upload-select-image');
   var pickFile = uploadForm.querySelector('#upload-file');
   var framingWindow = uploadForm.querySelector('.upload-overlay');
-  var picturesDOMElements = document.querySelector('.pictures');
+  var picturesContainerElement = document.querySelector('.pictures');
   window.data.setPicturesObjArray(OBJECT_AMOUNT);
-  var fragment = window.picture.appendPicturesToFragment(window.data.pictures);
-  picturesDOMElements.appendChild(fragment);
+  var fragment = window.picture.fillFragment(window.data.pictures);
+  picturesContainerElement.appendChild(fragment);
 
   /* ------ Закрытие окна по кнопке -------------------------------------*/
 
@@ -36,7 +36,7 @@
 
   /* ------ Назначение обработчиков событий для галереи ---------------*/
   function setGalleryListeners() {
-    var arrayElements = picturesDOMElements.querySelectorAll('.picture');
+    var arrayElements = picturesContainerElement.querySelectorAll('.picture');
     var arrayLength = arrayElements.length;
     for (var i = 0; i < arrayLength; i++) {
       setPictureListeners(arrayElements[i], i);
