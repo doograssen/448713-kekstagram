@@ -2,15 +2,12 @@
 
 (function () {
   var ENTER_KEY_CODE = 13;
-  var OBJECT_AMOUNT = 25;
   var overlay = document.querySelector('.gallery-overlay');
   var uploadForm = document.querySelector('#upload-select-image');
   var pickFile = uploadForm.querySelector('#upload-file');
   var framingWindow = uploadForm.querySelector('.upload-overlay');
   var picturesContainerElement = document.querySelector('.pictures');
-  window.data.setPicturesObjArray(OBJECT_AMOUNT);
-  var fragment = window.picture.fillFragment(window.data.pictures);
-  picturesContainerElement.appendChild(fragment);
+
 
   /* ------ Закрытие окна по кнопке -------------------------------------*/
 
@@ -55,6 +52,15 @@
     setCloseBtnListener(closeButton, framingWindow);
   }
 
-  setGalleryListeners();
+  var successXHRExecution = function (response) {
+    window.data.pictures = response;
+    var fragment = window.picture.fillFragment(window.data.pictures);
+    picturesContainerElement.appendChild(fragment);
+    setGalleryListeners();
+  };
+
+  /* -----запрос загрузки данных-------------------------------------------------------------*/
+  window.backend.load(successXHRExecution, window.backend.serverError);
+
   setFramingListeners();
 })();

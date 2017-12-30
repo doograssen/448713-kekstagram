@@ -290,6 +290,18 @@
     evt.target.setCustomValidity(hashTagString.message);
   });
 
+  var resetForm = function () {
+    effectLevelHandle.displayEffectRangeElement(INITIAL_PICTURE_EFFECT);
+    imagePreview.resetPreview();
+    window.utils.closePopup(framingWindow);
+  };
+
+
+  uploadForm.addEventListener('submit', function (evt) {
+    evt.preventDefault();
+    window.backend.save(new FormData(uploadForm), resetForm, window.backend.serverError);
+  });
+
   window.form = {
     effect: imagePreview.currentEffect,
     resetImage: function () {
