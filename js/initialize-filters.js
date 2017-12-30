@@ -2,9 +2,9 @@
 
 (function () {
 
-  window.initializeFilters = function (sourseClass, targetClass, applyFilter) {
+  window.initializeFilters = function (parameter1, parameter2, applyFilter) {
     if (applyFilter && typeof applyFilter === 'function') {
-      applyFilter(sourseClass, targetClass);
+      applyFilter(parameter1, parameter2);
     }
   };
 })();
