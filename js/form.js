@@ -21,6 +21,8 @@
   var handleElement = framingWindow.querySelector('.upload-effect-level-pin');
   var effectControls = framingWindow.querySelector('.upload-effect-controls');
   var hashTagInput = uploadForm.querySelector('.upload-form-hashtags');
+  var IncrementSizeElement = framingWindow.querySelector('.upload-resize-controls-button-inc');
+  var DecrementSizeElement = framingWindow.querySelector('.upload-resize-controls-button-dec');
   var frameSize = framingWindow.querySelector('.upload-resize-controls-value');
   var imageSample = uploadForm.querySelector('.effect-image-preview');
   var comment = framingWindow.querySelector('.upload-form-description');
@@ -99,69 +101,51 @@
   };
 
   var imagePreview = {
-    currentSize: MAX_PERCENTAGE_SIZE,
     currentEffect: INITIAL_PICTURE_EFFECT,
-    imageSizes: {'25%': 'image-size-s', '50%': 'image-size-m', '75%': 'image-size-l', '100%': 'image-size-xl'},
-    incrementSizeValue: function () {
-      var size = parseInt(this.currentSize, 10);
-      if (size !== MAX_PERCENTAGE_SIZE) {
-        size += PERCENTAGE_SIZE_INDENT;
-        frameSize.value = size + '%';
-        this.setImageSizeClass();
+    resizeImage: function (modifier) {
+      var border;
+      if (modifier === 1) {
+        border = MAX_PERCENTAGE_SIZE;
+      } else if ((modifier === -1)) {
+        border = MIN_PERCENTAGE_SIZE;
       }
+      return function () {
+        var size = parseInt(frameSize.value, 10);
+        if (size !== border) {
+          size = size + modifier * PERCENTAGE_SIZE_INDENT;
+          frameSize.value = size + '%';
+          imageSample.style.transform = 'scale(' + size / 100 + ')';
+        }
+      };
     },
-    decrementSizeValue: function () {
-      var size = parseInt(this.currentSize, 10);
-      if (size !== MIN_PERCENTAGE_SIZE) {
-        size -= PERCENTAGE_SIZE_INDENT;
-        frameSize.value = size + '%';
-        this.setImageSizeClass();
-      }
+    getImageEffectClass: function (effect) {
+      return 'effect-' + effect;
     },
-    setImageSizeClass: function () {
-      var sizeClass = this.getImageSizeClass();
-      if (imageSample.classList.contains(sizeClass)) {
-        imageSample.classList.remove(sizeClass);
-      }
-      this.currentSize = frameSize.value;
-      imageSample.classList.add(this.getImageSizeClass());
-    },
-    getImageSizeClass: function () {
-      return this.imageSizes[this.currentSize];
-    },
-    getImageEffectClass: function () {
-      return 'effect-' + this.currentEffect;
-    },
-    setImageEffect: function (effectName) {
-      var effectClass = this.getImageEffectClass();
-      if (imageSample.classList.contains(effectClass)) {
-        imageSample.classList.remove(effectClass);
+    setImageEffect: function (sourceClass, targetClass) {
+      if (imageSample.classList.contains(sourceClass)) {
+        imageSample.classList.remove(sourceClass);
         if (imageSample.style.filter) {
           imageSample.style.filter = '';
         }
       }
-      this.currentEffect = effectName;
-      if (effectName !== 'none') {
-        effectClass = this.getImageEffectClass();
-        imageSample.classList.add(effectClass);
+      if (targetClass !== 'none') {
+        imageSample.classList.add(targetClass);
       }
     },
     resetPreview: function () {
-      var size = this.getImageSizeClass();
-      if (imageSample.classList.contains(size)) {
-        imageSample.classList.remove(size);
+      var size = frameSize.value;
+      if (parseInt(size, 10) !== MAX_PERCENTAGE_SIZE) {
+        size = MAX_PERCENTAGE_SIZE;
+        frameSize.value = size + '%';
+        imageSample.style.transform = 'scale(' + size / 100 + ')';
       }
-      var effect = this.getImageEffectClass();
-      if (imageSample.classList.contains(effect)) {
-        imageSample.classList.remove(effect);
-        if (imageSample.style.filter) {
-          imageSample.style.filter = '';
-        }
+      var sourceClass = this.getImageEffectClass(this.currentEffect);
+      var targetClass = this.getImageEffectClass(INITIAL_PICTURE_EFFECT);
+      window.initializeFilters(sourceClass, targetClass, this.setImageEffect);
+      if (imageSample.style.filter) {
+        imageSample.style.filter = '';
       }
-      this.currentSize = MAX_PERCENTAGE_SIZE;
       this.currentEffect = INITIAL_PICTURE_EFFECT;
-      imageSample.classList.add(this.getImageSizeClass());
-      frameSize.value = MAX_PERCENTAGE_SIZE + '%';
     }
   };
 
@@ -287,19 +271,16 @@
     evtTarget.setCustomValidity(messageText);
   });
 
-  framingWindow.querySelector('.upload-resize-controls').addEventListener('click', function (evt) {
-    var evtTarget = evt.target;
-    if (evtTarget.classList.contains('upload-resize-controls-button-dec')) {
-      imagePreview.decrementSizeValue();
-    } else if (evt.target.classList.contains('upload-resize-controls-button-inc')) {
-      imagePreview.incrementSizeValue();
-    }
-  });
+  window.initializeScale(IncrementSizeElement, imagePreview.resizeImage(1));
+  window.initializeScale(DecrementSizeElement, imagePreview.resizeImage(-1));
 
   effectControls.addEventListener('click', function (evt) {
     var evtTarget = evt.target;
     if (evtTarget.type === 'radio') {
-      imagePreview.setImageEffect(evtTarget.value);
+      var sourceClass = imagePreview.getImageEffectClass(imagePreview.currentEffect);
+      var targetClass = imagePreview.getImageEffectClass(evtTarget.value);
+      window.initializeFilters(sourceClass, targetClass, imagePreview.setImageEffect);
+      imagePreview.currentEffect = evtTarget.value;
       effectLevelHandle.displayEffectRangeElement(evtTarget.value);
     }
   });
